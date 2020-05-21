@@ -44,11 +44,24 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.generateAuthToken = async function () {
 	// Generate auth Token
+	console.log(this);
 	const user = this
 	const token = jwt.sign({_id:user._id},process.env.JWT_KEY);
 	user.tokens = user.tokens.concat({token});
 	await user.save()
 	return token;
+}
+
+userSchema.statics.findByCredentials = async (email,password) =>{
+	const user = await User.findOne({email})
+	if(!user){
+		throw new Error({error: 'User does not exist'});
+	}
+	const isPasswordMatch = await bcrypt.compare(password,user.password)
+	if(!isPasswordMatch){
+		throw new Error({error: 'Please check your password'});
+	}
+	return user;
 }
 
 
